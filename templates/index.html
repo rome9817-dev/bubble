@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer & Food Pairing Selector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .suggestions-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .suggestions-section.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .food-item {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .beers-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .beers-list li {
+            background: white;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            color: #333;
+            border-left: 4px solid #764ba2;
+            font-weight: 500;
+        }
+
+        .beers-list li:before {
+            content: "🍺 ";
+            margin-right: 8px;
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: 8px;
+            display: none;
+            margin-top: 15px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .suggestions-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .all-pairings-btn {
+            width: 100%;
+            margin-top: 30px;
+            background: #6c757d;
+            text-align: center;
+        }
+
+        .all-pairings-btn:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+            width: auto;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .pairing-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .pairing-item:last-child {
+            border-bottom: none;
+        }
+
+        .pairing-food {
+            font-weight: 600;
+            color: #667eea;
+            text-transform: capitalize;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .pairing-desc {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .pairing-beers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .beer-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍺 Beer Pairing</h1>
+        <p class="subtitle">Find the Perfect Beer for Your Meal</p>
+
+        <div class="input-section">
+            <label for="foodInput">What are you eating?</label>
+            <div class="input-group">
+                <input type="text" id="foodInput" placeholder="e.g., pizza, steak, fish, Asian food..." />
+                <button onclick="getSuggestion()">Find Beer</button>
+            </div>
+            <div class="loading" id="loading">
+                <p>🔍 Finding the perfect beer...</p>
+            </div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="suggestions-section" id="suggestions">
+            <div class="suggestions-title">Perfect Beer Pairings!</div>
+            <div class="food-item" id="foodItem"></div>
+            <div class="description" id="description"></div>
+            <ul class="beers-list" id="beersList"></ul>
+        </div>
+
+        <button class="all-pairings-btn" onclick="showAllPairings()">Browse All Pairings</button>
+    </div>
+
+    <!-- Modal for All Pairings -->
+    <div class="modal" id="pairingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>All Available Pairings</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="allPairingsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const foodInput = document.getElementById('foodInput');
+
+        // Allow Enter key to trigger search
+        foodInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                getSuggestion();
+            }
+        });
+
+        async function getSuggestion() {
+            const food = foodInput.value.trim();
+
+            if (!food) {
+                showError('Please enter a food item!');
+                return;
+            }
+
+            const errorDiv = document.getElementById('error');
+            errorDiv.classList.remove('show');
+
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch('/api/suggest-beer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ food: food })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get suggestions');
+                }
+
+                const data = await response.json();
+                displaySuggestions(data);
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        function displaySuggestions(data) {
+            document.getElementById('foodItem').textContent = '🍽️ ' + data.food;
+            document.getElementById('description').textContent = data.description;
+
+            const beersList = document.getElementById('beersList');
+            beersList.innerHTML = '';
+
+            data.beers.forEach(beer => {
+                const li = document.createElement('li');
+                li.textContent = beer;
+                beersList.appendChild(li);
+            });
+
+            document.getElementById('suggestions').classList.add('active');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        async function showAllPairings() {
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch('/api/all-pairings');
+                const data = await response.json();
+                displayAllPairings(data);
+                document.getElementById('pairingsModal').classList.add('active');
+            } catch (error) {
+                showError('Error loading pairings: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        function displayAllPairings(pairings) {
+            const content = document.getElementById('allPairingsContent');
+            content.innerHTML = '';
+
+            for (const [food, details] of Object.entries(pairings)) {
+                const pairingDiv = document.createElement('div');
+                pairingDiv.className = 'pairing-item';
+
+                const foodName = document.createElement('div');
+                foodName.className = 'pairing-food';
+                foodName.textContent = food;
+
+                const desc = document.createElement('div');
+                desc.className = 'pairing-desc';
+                desc.textContent = details.description;
+
+                const beersDiv = document.createElement('div');
+                beersDiv.className = 'pairing-beers';
+
+                details.beers.forEach(beer => {
+                    const tag = document.createElement('span');
+                    tag.className = 'beer-tag';
+                    tag.textContent = beer;
+                    beersDiv.appendChild(tag);
+                });
+
+                pairingDiv.appendChild(foodName);
+                pairingDiv.appendChild(desc);
+                pairingDiv.appendChild(beersDiv);
+                content.appendChild(pairingDiv);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('pairingsModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('pairingsModal');
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
